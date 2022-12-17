@@ -9,40 +9,65 @@ const API_ENDPOINT_REFRESH = "/token/refresh";
 // type AuthType = 'login' | 'signup'
 class AuthService {
 
-    // create enum type login or signup
-    async addressInfo(address: string): Promise<any> {
-        const apiUrl = "/address/"+address
-        // return axios.get(apiUrl)
+    // get account info
+    /*
+    /*
+{
+  "is_active": bool,
+  "status": string,
+  "balance_ton": string,
+  "balance_nano": int,
+  "last_lt": int
+}
+    // get acc transactions
+    /*
+[{
+    "timestamp": int,
+    "direction": string (in | out),
+    "amount_ton": string,
+    "amount_nano": int,
+    "address": string,
+    "comment": string,
+  },...]
+    */
+    async apiCall(address: string, call: string): Promise < any > {
+        let url = "/address/" + address
+        if (call === "transactions") {
+            url += "/transactions"
+        }
         return client
-            .get(apiUrl)
-            .then(response => {
-                console.log("addressInfo got resp:")
-                console.log({ response })
-                if (response &&
-                    response.data 
-                    ) {
-                    return response.data
-                }
-                throw 'data not found'
-            })
-            .catch(error => {
-                console.log("addressInfo error obj:")
-                console.log({ error })
-                let errorMsg: string;
-                if (error &&
-                    error.response &&
-                    error.response.data &&
-                    error.response.data.error) {
-                    errorMsg = error.response.data.error
-                } else if (error && error.message) {
-                    errorMsg = error.message
-                } else {
-                    errorMsg = "Error, try again later"
-                }
-                console.log("auth.service error msg:" + errorMsg)
-                throw errorMsg
-            });
-    }
+        .get(url)
+        .then(response => {
+            console.log("apiCall "+call+" got resp:")
+            console.log({ response })
+            if (response &&
+                response.data
+            ) {
+                return response.data
+            }
+            throw 'data not found'
+        })
+        .catch(error => {
+            console.log("apiCall "+call+"  error obj:")
+            console.log({ error })
+            let errorMsg: string;
+            if (error &&
+                error.response &&
+                error.response.data &&
+                error.response.data.error) {
+                errorMsg = error.response.data.error
+            } else if (error && error.message) {
+                errorMsg = error.message
+            } else {
+                errorMsg = "Error, try again later"
+            }
+            console.log("apiCall "+call+"  error msg:" + errorMsg)
+            throw errorMsg
+        });
+}
+
+
+
 
 
 }

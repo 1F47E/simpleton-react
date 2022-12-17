@@ -27,8 +27,6 @@ import {
   Badge,
 } from '@mantine/core'
 import { showNotification } from '@mantine/notifications';
-import { Prism } from '@mantine/prism';
-import jwtDecode, { JwtPayload } from "jwt-decode";
 import { ActionIcon, useMantineColorScheme } from '@mantine/core';
 import {
   IconSun,
@@ -37,46 +35,19 @@ import {
   IconUser,
   IconBrandGithub,
   Icon123,
-  IconBomb
+  IconBomb,
+  IconSearch
 } from '@tabler/icons';
 import dayjs from 'dayjs';
-
-
-import AuthService from '../services/api';
+import Api from '../services/api';
 
 const radius = "md"
 const size = "md"
 
 
-// check token, return JwtPayload
-// const checkToken = async (token: string) => {
-const checkToken = (token: string): JwtPayload | null => {
-  console.log('decoding token: ', token);
-  try {
-    const decodedHeader = jwtDecode<JwtPayload>(token, { header: true });
-    const decodedPayload = jwtDecode<JwtPayload>(token, { header: false });
-    console.log('decodedHeader: ', decodedHeader);
-    console.log('decodedPayload: ', decodedPayload);
-    return decodedPayload;
-  } catch (error) {
-    console.log('error: ', error);
-    return null;
-  }
-}
-
-// // create type user extend JwtPayload
-type User = JwtPayload & {
-  name: string;
-  type: string;
-}
-
-type TokenDecoded = {
-  header: JwtPayload;
-  body: JwtPayload;
-  signature: string;
-}
 
 const formDataDefault = { address: '' }
+
 
 type Account = {
   balance_nano: number,
@@ -84,6 +55,17 @@ type Account = {
   is_active: boolean,
   status: string
 }
+
+
+type Transaction = {
+  timestamp: number,
+  direction: string,
+  amount_ton: string,
+  amount_nano: number,
+  address: string,
+  comment: string,
+}
+
 
 const Home = () => {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
@@ -95,11 +77,7 @@ const Home = () => {
   const [mode, setMode] = useState('signin');
   const [formData, setFormData] = useState(formDataDefault)
   const [account, setAccount] = useState<Account | null>(null)
-  // tokenData
-  // TODO: refactor all token data to one obj
-  const [user, setUser] = useState<JwtPayload | null>(null)
-  // tokenHeader
-  const [tokenHeader, setTokenHeader] = useState<JwtPayload | null>(null)
+  const [transactions, setTransactions] = useState<Transaction[] | null>(null)
 
 
   const handleInputChange = (event: any) => {
@@ -110,8 +88,13 @@ const Home = () => {
     }))
   }
 
+  // check if formdata.address is not empty and return bool
+  const isInputNotEmpty = () => {
+    return formData.address.length > 0
+  }
 
-  const handleScan = (e: any) => {
+
+  const handleApiCall = (call: string) => {
     const address = formData.address
     if (!address) {
       showNotification({
@@ -123,12 +106,10 @@ const Home = () => {
     }
     console.log(JSON.stringify(formData))
     setIsLoading(true);
-    const url = "/address/" + address
-
-
-    AuthService.addressInfo(formData.address).then(
+    Api.apiCall(formData.address, call).then(
       (data) => {
-        setAccount(data);
+        if (call === "account") setAccount(data);
+        if (call === "transactions") setTransactions(data);
         setIsLoading(false);
         console.log(data)
       },
@@ -146,13 +127,13 @@ const Home = () => {
   return (
     <>
       <Flex
-        // mih={50}
-        // bg="rgba(0, 0, 0, .3)"
+        mih={50}
+        bg="rgba(0, 0, 0, .3)"
         // gap="md"
         justify="flex-end"
-        // align="center"
-        // direction="row"
-        // wrap="wrap"
+      // align="center"
+      // direction="row"
+      // wrap="wrap"
       >
 
         <Group position="right" sx={{ padding: 10, margin: 10 }}>
@@ -170,7 +151,7 @@ const Home = () => {
       <Container size={420} my={40}>
         <Paper radius="md">
 
-          <div style={{ width: 400, position: 'relative' }}>
+          <div style={{ minWidth: 320, position: 'relative' }}>
             {isLoading && <LoadingOverlay
               loaderProps={{ size: 'md', color: 'blue', variant: 'bars' }}
               overlayOpacity={0.5}
@@ -188,20 +169,25 @@ const Home = () => {
               value={formData.address}
               onChange={handleInputChange}
               withAsterisk
+              icon={<IconSearch />}
+              sx={{ width: "100%" }}
             />
 
-            <Center>
-              <Button
-                variant="gradient"
-                gradient={{ from: 'indigo', to: 'blue', deg: 50 }}
-                radius={radius}
-                size={size}
-                mt="xl"
-                fullWidth
-                onClick={handleScan}
-                disabled={isLoading}
-              >Scan</Button>
-            </Center>
+            {isInputNotEmpty() &&
+              <Center>
+                <Button
+                  variant="gradient"
+                  gradient={{ from: 'indigo', to: 'blue', deg: 50 }}
+                  radius={radius}
+                  size={size}
+                  mt="xl"
+                  fullWidth
+                  onClick={() => handleApiCall("account")}
+                  disabled={isLoading}
+                >Look up</Button>
+              </Center>
+            }
+
           </div>
         </Paper>
       </Container>
@@ -209,67 +195,96 @@ const Home = () => {
 
       <Container my={40}>
         {account &&
-          <Center>
-            <Paper shadow="xs" radius="md" p="md" withBorder sx={{ maxWidth: 420 }}>
-              <Group>
-                <Text>Status</Text>
-                {account?.is_active
-                  ?
-                  <Badge color="green">Active</Badge>
-                  :
-                  <Badge color="red">Not active</Badge>
-                }
-              </Group>
-              <Group>
-                <Text>Balance</Text>
-                {account?.balance_ton} TON
-              </Group>
-            </Paper>
+          <>
+            <Center>
+              <Paper shadow="xs" radius="md" p="md" withBorder sx={{ maxWidth: 420 }}>
+                <Group>
+                  <Text>Status</Text>
+                  {account?.is_active
+                    ?
+                    <Badge color="green">Active</Badge>
+                    :
+                    <Badge color="red">Not active</Badge>
+                  }
+                </Group>
+                <Group>
+                  <Text>Balance</Text>
+                  {account?.balance_ton} TON
+                </Group>
+              </Paper>
 
+            </Center>
+            {!transactions &&
+              <Center>
+                <Button
+                  variant="gradient"
+                  gradient={{ from: 'red', to: 'grape', deg: 20 }}
+                  radius={radius}
+                  size="sm"
+                  mt="xl"
+                  // fullWidth
+                  onClick={() => handleApiCall("transactions")}
+                  disabled={isLoading}
+                >Load transactions</Button>
+              </Center>
+            }
+            <Space h="xl" />
+          </>
+        }
+
+        {transactions &&
+        
+          <Center>
+              <Table 
+              // striped 
+              highlightOnHover 
+              withBorder 
+              // withColumnBorders
+              verticalSpacing="md"
+              >
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Direction</th>
+                    <th>Amount</th>
+                    {/* <th>Address</th> */}
+                    <th>Comment</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* timestamp: number,
+              direction: string,
+              amount_ton: string,
+              amount_nano: number,
+              address: string,
+              comment: string, */}
+                  {transactions?.map((transaction) => (
+                    <tr key={transaction.timestamp}>
+<td>
+                        {/* convert timestamp to date with dayjs */}
+                        {dayjs.unix(transaction.timestamp).format('DD.MM.YYYY HH:mm')}
+                      </td>
+                      <td width={50} align="center">
+                        {transaction.direction === "in"
+                          ?
+                          <Badge color="green">IN</Badge>
+                          :
+                          <Badge color="red">OUT</Badge>
+                        }
+
+                      </td>
+                      <td>
+                      {transaction.amount_ton} TON
+                      </td>
+                      {/* <td>{transaction.address}</td> */}
+                      <td>{transaction.comment}</td>
+                      
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
           </Center>
         }
-        <Center>
-          <Paper mt="md" radius="md" sx={{ padding: 20 }}>
-
-
-            <Table striped highlightOnHover sx={{ maxWidth: 520 }}>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Direction</th>
-                  <th>Amount</th>
-                  <th>Address</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr key='uid'>
-                  <td>16.12.2022 12:12</td>
-                  <td>
-                    <Badge color="green">IN</Badge>
-                  </td>
-                  <td>0.012312 TON</td>
-                  <td>123</td>
-                </tr>
-                <tr key='type'>
-                  <td>16.12.2022 12:12</td>
-                  <td>
-                    <Badge color="red">OUT</Badge>
-                  </td>
-                  <td>0.012312 TON</td>
-                  <td>123</td>
-                </tr>
-                <tr key='iat'>
-                  <td>16.12.2022 12:12</td>
-                  <td>
-                    <Badge color="green">IN</Badge>
-                  </td>
-                  <td>33 TON</td>
-                  <td>123</td>
-                </tr>
-              </tbody>
-            </Table>
-          </Paper>
-        </Center>
       </Container>
 
 

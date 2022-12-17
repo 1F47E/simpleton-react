@@ -1,17 +1,14 @@
 ```
-SERVICE AUTH
+SIMPLETON WALLET GUI
 ```
 ```
-Basic auth service using JWT tokens written in Rust and Rocket
+Front end for the simpleton wallet service
 ```
 
-### live demo https://react-auth-client.vercel.app/
+### live demo https://simpleton-react.vercel.app/
 
 
 
 # routes
-#### GET /me
-#### POST /auth/signin
-#### POST /auth/signup
-#### GET /token/verify
-#### POST /token/refresh
+#### GET /address/{addr}
+#### GET /address/{addr}/transactions
