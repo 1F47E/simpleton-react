@@ -23,8 +23,9 @@ import {
   Overlay,
   LoadingOverlay,
   Anchor,
-  useMantineTheme,
   Badge,
+  Image,
+  useMantineTheme,
 } from '@mantine/core'
 import { showNotification } from '@mantine/notifications';
 import { ActionIcon, useMantineColorScheme } from '@mantine/core';
@@ -51,12 +52,16 @@ export default function Header() {
         <Flex
         mih={50}
         bg="rgba(0, 0, 0, .3)"
-        // gap="md"
-        justify="flex-end"
-      // align="center"
-      // direction="row"
-      // wrap="wrap"
+        gap="md"
+        justify="space-between"
+      align="center"
+      direction="row"
+      wrap="wrap"
       >
+
+        <Group position="left" sx={{ paddingLeft: 20, margin: 10 }}>
+        <Image src="/kartel-logo-white.svg" alt="kartel" width={150} height={70} />
+        </Group>
 
         <Group position="right" sx={{ padding: 10, margin: 10 }}>
           <Switch
