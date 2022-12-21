@@ -19,7 +19,7 @@ export default function App(props: AppProps) {
         <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" />
       </Head>
       <Script async src="https://telegram.org/js/telegram-widget.js?21" data-telegram-login="Kartel_app_bot" data-size="medium" data-radius="10" data-onauth="onTelegramAuth(user)" data-request-access="write"></Script>
-      <Script src="../scripts/telegram.js" />
+      <Script src="/scripts/telegram.js" />
 
       <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
       <MantineProvider theme={{ colorScheme }} withGlobalStyles withNormalizeCSS>
