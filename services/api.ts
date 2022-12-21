@@ -7,7 +7,7 @@ const API_ENDPOINT_SIGNUP = "/auth/signup";
 const API_ENDPOINT_VERIFY = "/token/verify";
 const API_ENDPOINT_REFRESH = "/token/refresh";
 // type AuthType = 'login' | 'signup'
-class AuthService {
+class ApiService {
 
     // get account info
     /*
@@ -31,7 +31,7 @@ class AuthService {
   },...]
     */
     async apiCall(address: string, call: string): Promise < any > {
-        let url = "/address/" + address
+        let url = "/account/" + address
         if (call === "transactions") {
             url += "/transactions"
         }
@@ -72,4 +72,4 @@ class AuthService {
 
 }
 
-export default new AuthService();
+export default new ApiService();

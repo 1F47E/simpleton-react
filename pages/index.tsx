@@ -38,16 +38,16 @@ import {
   IconBomb,
   IconSearch
 } from '@tabler/icons';
+
+import Header from "../components/Header"
 import dayjs from 'dayjs';
 import Api from '../services/api';
+import AccountInfo from '../components/AccountInfo';
 
 const radius = "md"
 const size = "md"
 
-
-
 const formDataDefault = { address: '' }
-
 
 type Account = {
   balance_nano: number,
@@ -55,7 +55,6 @@ type Account = {
   is_active: boolean,
   status: string
 }
-
 
 type Transaction = {
   timestamp: number,
@@ -74,7 +73,6 @@ const Home = () => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const [mode, setMode] = useState('signin');
   const [formData, setFormData] = useState(formDataDefault)
   const [account, setAccount] = useState<Account | null>(null)
   const [transactions, setTransactions] = useState<Transaction[] | null>(null)
@@ -96,6 +94,10 @@ const Home = () => {
 
   const handleApiCall = (call: string) => {
     const address = formData.address
+    // setAccount(null)
+    if (call === "account") {
+      setTransactions(null)
+    }
     if (!address) {
       showNotification({
         color: 'red',
@@ -126,27 +128,7 @@ const Home = () => {
 
   return (
     <>
-      <Flex
-        mih={50}
-        bg="rgba(0, 0, 0, .3)"
-        // gap="md"
-        justify="flex-end"
-      // align="center"
-      // direction="row"
-      // wrap="wrap"
-      >
-
-        <Group position="right" sx={{ padding: 10, margin: 10 }}>
-          <Switch
-            size="md"
-            color={dark ? 'gray' : 'dark'}
-            onLabel={<IconSun size={16} stroke={2.5} color={theme.colors.yellow[4]} />}
-            offLabel={<IconMoonStars size={16} stroke={2.5} color={theme.colors.blue[6]} />}
-            onClick={() => toggleColorScheme()}
-          />
-        </Group>
-
-      </Flex>
+    <Header />
 
       <Container size={420} my={40}>
         <Paper radius="md">
@@ -197,24 +179,9 @@ const Home = () => {
         {account &&
           <>
             <Center>
-              <Paper shadow="xs" radius="md" p="md" withBorder sx={{ maxWidth: 420 }}>
-                <Group>
-                  <Text>Status</Text>
-                  {account?.is_active
-                    ?
-                    <Badge color="green">Active</Badge>
-                    :
-                    <Badge color="red">Not active</Badge>
-                  }
-                </Group>
-                <Group>
-                  <Text>Balance</Text>
-                  {account?.balance_ton} TON
-                </Group>
-              </Paper>
-
+              <AccountInfo account={account} />
             </Center>
-            {!transactions &&
+            {account && account.is_active && 
               <Center>
                 <Button
                   variant="gradient"
@@ -225,7 +192,7 @@ const Home = () => {
                   // fullWidth
                   onClick={() => handleApiCall("transactions")}
                   disabled={isLoading}
-                >Load transactions</Button>
+                >{transactions ? `Reload transactions` : `Load transactions`}</Button>
               </Center>
             }
             <Space h="xl" />
@@ -233,56 +200,56 @@ const Home = () => {
         }
 
         {transactions &&
-        
+
           <Center>
-              <Table 
+            <Table
               // striped 
-              highlightOnHover 
-              withBorder 
+              highlightOnHover
+              withBorder
               // withColumnBorders
               verticalSpacing="md"
-              >
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Direction</th>
-                    <th>Amount</th>
-                    {/* <th>Address</th> */}
-                    <th>Comment</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* timestamp: number,
+            >
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Direction</th>
+                  <th>Amount</th>
+                  {/* <th>Address</th> */}
+                  <th>Comment</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* timestamp: number,
               direction: string,
               amount_ton: string,
               amount_nano: number,
               address: string,
               comment: string, */}
-                  {transactions?.map((transaction) => (
-                    <tr key={transaction.timestamp}>
-<td>
-                        {/* convert timestamp to date with dayjs */}
-                        {dayjs.unix(transaction.timestamp).format('DD.MM.YYYY HH:mm')}
-                      </td>
-                      <td width={50} align="center">
-                        {transaction.direction === "in"
-                          ?
-                          <Badge color="green">IN</Badge>
-                          :
-                          <Badge color="red">OUT</Badge>
-                        }
+                {transactions?.map((transaction) => (
+                  <tr key={transaction.timestamp}>
+                    <td>
+                      {/* convert timestamp to date with dayjs */}
+                      {dayjs.unix(transaction.timestamp).format('DD.MM.YYYY HH:mm')}
+                    </td>
+                    <td width={50} align="center">
+                      {transaction.direction === "in"
+                        ?
+                        <Badge color="green">IN</Badge>
+                        :
+                        <Badge color="red">OUT</Badge>
+                      }
 
-                      </td>
-                      <td>
+                    </td>
+                    <td>
                       {transaction.amount_ton} TON
-                      </td>
-                      {/* <td>{transaction.address}</td> */}
-                      <td>{transaction.comment}</td>
-                      
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
+                    </td>
+                    {/* <td>{transaction.address}</td> */}
+                    <td>{transaction.comment}</td>
+
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
           </Center>
         }
       </Container>
